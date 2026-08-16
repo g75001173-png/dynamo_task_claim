@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -16,6 +17,7 @@ import requests
 
 
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("claim_request.json")
+CONFIG_ENV_VAR = "CLAIM_REQUEST_JSON"
 TRANSIENT_STATUS_CODES = {408, 425, 429, 500, 502, 503, 504}
 TASK_ID_KEYS = {
     "annotationtaskid",
@@ -48,6 +50,7 @@ class ClaimConfig:
     polling: PollingConfig
     proof_path: Path
     debug_path: Path
+    source: str
 
 
 class ConfigError(ValueError):
@@ -89,14 +92,21 @@ def resolve_output_path(config_path: Path, value: Any, default_name: str) -> Pat
 
 def load_config(config_path: Path) -> ClaimConfig:
     try:
-        raw_config = json.loads(config_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise ConfigError(
-            f"Configuration not found: {config_path}. "
-            "Create it from claim_request.example.json."
-        ) from exc
+        raw_config_text = config_path.read_text(encoding="utf-8")
+        config_source = str(config_path)
+    except FileNotFoundError:
+        raw_config_text = os.environ.get(CONFIG_ENV_VAR)
+        config_source = CONFIG_ENV_VAR
+        if raw_config_text is None:
+            raise ConfigError(
+                f"Configuration not found: {config_path}. Create it from "
+                f"claim_request.example.json or set {CONFIG_ENV_VAR}."
+            ) from None
+
+    try:
+        raw_config = json.loads(raw_config_text)
     except json.JSONDecodeError as exc:
-        raise ConfigError(f"Invalid JSON in {config_path}: {exc}") from exc
+        raise ConfigError(f"Invalid JSON in {config_source}: {exc}") from exc
 
     if not isinstance(raw_config, dict):
         raise ConfigError("The configuration root must be a JSON object")
@@ -182,6 +192,7 @@ def load_config(config_path: Path) -> ClaimConfig:
             raw_config.get("debug_file"),
             "unexpected_response.json",
         ),
+        source=config_source,
     )
 
 
@@ -455,6 +466,7 @@ def main() -> int:
     if args.check:
         header_names = ", ".join(config.headers.keys())
         print(f"[OK] Configuration is valid for project {config.project_id}.")
+        print(f"[*] Configuration source: {config.source}")
         print(f"[*] Request headers: {header_names}")
         return 0
 
