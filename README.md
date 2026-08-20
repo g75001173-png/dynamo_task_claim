@@ -1,37 +1,25 @@
-# Dynamo Task Claim
+# Dynamo Task Sniper
 
-Polls the configured Handshake claim endpoint until a task is returned.
+Async Handshake task sniper using aiohttp — pure API, no browser.
 
-## Local Setup
+## Setup
 
 ```powershell
-python -m pip install -r requirements.txt
-Copy-Item claim_request.example.json claim_request.json
-python dynamo_claim.py --check
-python dynamo_claim.py
+python -m pip install aiohttp
+python dynamo_sniper.py
 ```
 
-Populate `claim_request.json` from an authenticated request before running it. The file is
-ignored by Git because it contains a live session cookie.
+Choose:
 
-## GitHub Codespaces
+1. **Start Polling (Sniper Mode)** – polls available tasks and fires parallel claims.
+2. **Test Connection (Available Tasks)** – verifies the session cookie and prints the raw API response.
+3. **Test Connection (My Past Tasks)** – lists claimed tasks.
 
-Do not commit `claim_request.json`. Store its complete JSON contents as a Codespaces secret:
+## Notes
 
-1. Open the repository's **Settings**.
-2. Open **Secrets and variables**, then **Codespaces**.
-3. Create a repository secret named `CLAIM_REQUEST_JSON`.
-4. Paste the complete contents of your local `claim_request.json` as the value.
-5. Create or restart the Codespace so the secret is available.
-
-Inside the Codespace, run:
-
-```bash
-python -m pip install -r requirements.txt
-python dynamo_claim.py --check
-python dynamo_claim.py
-```
-
-The script uses the local `claim_request.json` when present and otherwise reads the
-`CLAIM_REQUEST_JSON` environment variable. Use the service only from locations and in ways
-permitted by its access policies.
+- `dynamo_sniper.py` contains a live session cookie and is git-ignored; refresh the `Cookie`
+  header when the session expires.
+- Task claiming uses the `task.claimTask` endpoint with `taskId`, `annotationProjectId`, and
+  `claimerId` — set `CLAIMER_ID` to your own value.
+- The server may still block requests by network location (`GEO_BLOCKED`); use it only from
+  locations and in ways permitted by the service's access policies.

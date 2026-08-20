@@ -1,4 +1,4 @@
 __pycache__/
 claim_request.json
-session_proof.json
-unexpected_response.json
+dynamo_sniper.py
+sniper.log
