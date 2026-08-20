@@ -17,8 +17,8 @@ Choose:
 
 ## Notes
 
-- `dynamo_sniper.py` contains a live session cookie and is git-ignored; refresh the `Cookie`
-  header when the session expires.
+- `dynamo_sniper.py` embeds a live session cookie; refresh the `Cookie` header when the
+  session expires (copy the fresh cookie values from your browser into `COOKIE`).
 - Task claiming uses the `task.claimTask` endpoint with `taskId`, `annotationProjectId`, and
   `claimerId` — set `CLAIMER_ID` to your own value.
 - The server may still block requests by network location (`GEO_BLOCKED`); use it only from

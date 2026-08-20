@@ -1,4 +1,3 @@
 __pycache__/
 claim_request.json
-dynamo_sniper.py
 sniper.log
